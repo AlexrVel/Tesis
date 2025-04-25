@@ -51,12 +51,6 @@ if archivo is not None:
         st.subheader("📈 Gráfica de la Sonificación")
         st.pyplot(fig)
 
-        # Mostrar enlaces para descargar archivos MIDI
-        col1, col2 = st.columns(2)
-        with col1:
-            st.download_button("⬇️ Descargar MIDI de Emisión", data=open(archivo_emision, "rb"), file_name=archivo_emision)
-        with col2:
-            st.download_button("⬇️ Descargar MIDI de Absorción", data=open(archivo_absorcion, "rb"), file_name=archivo_absorcion)
 
         # Convertir a WAV
         #convertir_midi_a_wav(archivo_emision, "emision.wav")
@@ -94,6 +88,4 @@ if archivo is not None:
         #mezclar_wavs("emision.wav", "absorcion.wav", salida="mezcla.wav")
         #st.audio("mezcla.wav", format="audio/wav")        
         
-        st.subheader(" Gráfica de la Sonificación")
-        st.pyplot(fig)
         st.success("✅ Sonificación completada. Archivos MIDI disponibles.")
