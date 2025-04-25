@@ -5,6 +5,7 @@ from midiutil import MIDIFile
 from scipy.ndimage import uniform_filter1d
 import os
 from midi2audio import FluidSynth
+import subprocess
 from pydub import AudioSegment
 
 
@@ -59,7 +60,7 @@ def detectar_region_plana(archivo, ventana=100, suavizado=10, rango_central=(0.9
 
 
 def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_nota=0.5,
-                        salida_midi_emision="salida_emision.mid", salida_midi_absorcion="salida_absorcion.mid",
+                        salida_midi_emision="salida_emision.mid", salida_midi_absorcion="salida_absorcion.mid", salida_midi_completo="salida_completo.mid",
                         ventana=100, suavizado=10, rango_central=(0.95, 1.05)):
     # Cargar datos
     with open(archivo, 'r') as f:
@@ -118,6 +119,10 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
     
     midi_absorcion = MIDIFile(1)
     midi_absorcion.addTempo(0, 0, tempo)
+
+    midi_completo = MIDIFile(2)  # Dos canales: 0 = emisión, 1 = absorción
+    midi_completo.addTempo(0, 0, tempo)
+    midi_completo.addTempo(1, 0, tempo)
     
     for i, intensity in enumerate(intensities):
         tiempo = i * duracion_nota  # Asegurar que ambos MIDI estén sincronizados
@@ -128,8 +133,10 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
         
         if intensity > mean_intensity:  # Emisión
             midi_emision.addNote(0, 0, note, tiempo, duracion_nota, 100)
+            midi_completo.addNote(0, 0, note, tiempo, duracion_nota, 100)
         else:  # Absorción
             midi_absorcion.addNote(0, 0, note, tiempo, duracion_nota, 100)
+            midi_completo.addNote(1, 1, note, tiempo, duracion_nota, 100)
     
     # Guardar archivos MIDI
     with open(salida_midi_emision, "wb") as output_file:
@@ -139,6 +146,10 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
     with open(salida_midi_absorcion, "wb") as output_file:
         midi_absorcion.writeFile(output_file)
     print(f"Archivo MIDI de absorción guardado como '{salida_midi_absorcion}'")
+
+    with open(salida_midi_completo, "wb") as f:
+        midi_completo.writeFile(f)
+    print(f"Archivo MIDI de absorción guardado como '{salida_midi_completo}'")
     
 
     # Mapeo de colores para cada nota
@@ -205,7 +216,7 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
 
 
 def sonificar_elipticas(archivo, rango_onda=(6500, 6700), tempo=200, duracion_nota=0.5,
-                        salida_midi_emision="elipticas_emision.mid", salida_midi_absorcion="elipticas_absorcion.mid",
+                        salida_midi_emision="elipticas_emision.mid", salida_midi_absorcion="elipticas_absorcion.mid", salida_midi_completo="salida_completo.mid",
                         ventana=100, suavizado=10, rango_central=(0.95, 1.05)):
     # Cargar datos
     with open(archivo, 'r') as f:
@@ -259,6 +270,10 @@ def sonificar_elipticas(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
     midi_absorcion = MIDIFile(1)
     midi_emision.addTempo(0, 0, tempo)
     midi_absorcion.addTempo(0, 0, tempo)
+
+    midi_completo = MIDIFile(2)  # Dos canales: 0 = emisión, 1 = absorción
+    midi_completo.addTempo(0, 0, tempo)
+    midi_completo.addTempo(1, 0, tempo)
     
     puntos_sonificados = []
     
@@ -269,8 +284,10 @@ def sonificar_elipticas(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
         
         if intensity >= 1:  # Emisión
             midi_emision.addNote(0, 0, note + 12, i * duracion_nota, duracion_nota, 100)  # Octava más alta
+            midi_completo.addNote(0, 0, note, tempo, duracion_nota, 100)
         else:  # Absorción
             midi_absorcion.addNote(0, 0, note - 12, i * duracion_nota, duracion_nota, 100)  # Octava más baja
+            midi_completo.addNote(1, 1, note, tempo, duracion_nota, 100)
         
         puntos_sonificados.append((wavelengths[i], intensity))
     
@@ -279,6 +296,9 @@ def sonificar_elipticas(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
         midi_emision.writeFile(output_file)
     with open(salida_midi_absorcion, "wb") as output_file:
         midi_absorcion.writeFile(output_file)
+    with open(salida_midi_completo, "wb") as f:
+        midi_completo.writeFile(f)
+    print(f"Archivo MIDI de absorción guardado como '{salida_midi_completo}'")
     
     print(f"Archivos MIDI guardados como '{salida_midi_emision}' y '{salida_midi_absorcion}'")
     
@@ -371,6 +391,15 @@ def tipo(archivo, rango_onda=(3800, 4200)):
 def convertir_midi_a_wav(nombre_midi, nombre_wav):
     sf2 = "default.sf2"  # soundfont (asegúrate de tenerlo)
     FluidSynth(sound_font=sf2).midi_to_audio(nombre_midi, nombre_wav)
+    
+def convertir_midi_a_wav_musescore(midi_file, wav_file, musescore_path="C:/Program Files/MuseScore 4/bin/MuseScore4.exe"):
+    """
+    Convierte un archivo MIDI a WAV usando MuseScore 4.
+    """
+    if not os.path.isfile(musescore_path):
+        raise FileNotFoundError("MuseScore no se encontró en la ruta indicada.")
+
+    subprocess.run([musescore_path, midi_file, "-o", wav_file], check=True)
     
 def mezclar_wavs(wav1, wav2, salida="mezcla.wav"):
     audio1 = AudioSegment.from_wav(wav1)

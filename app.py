@@ -1,6 +1,7 @@
 import streamlit as st
 import os
-from funciones import tipo, sonificar_espirales, sonificar_elipticas, convertir_midi_a_wav, mezclar_wavs
+from funciones import tipo, sonificar_espirales, sonificar_elipticas 
+from funciones import convertir_midi_a_wav, mezclar_wavs, convertir_midi_a_wav_musescore
 
 st.set_page_config(page_title="🎵 Sonificación de Galaxias", layout="centered")
 
@@ -27,29 +28,24 @@ if archivo is not None:
     duracion = st.slider("Duración por nota (segundos)", 0.1, 1.0, 0.5, step=0.1)
 
     # Ejecutar sonificación
-#    if st.button("🎶 Sonificar espectro"):
-#        if tipo_galaxia == "Espiral":
-#            fig = sonificar_espirales(archivo_path, rango_onda=(rango_ini, rango_fin), tempo=tempo, duracion_nota=duracion)
-#        elif tipo_galaxia == "Eliptica":
-#            fig = sonificar_elipticas(archivo_path, rango_onda=(rango_ini, rango_fin), tempo=tempo, duracion_nota=duracion)
-#        else:
-#            st.warning("Este tipo de galaxia es 'Irregular'. No se ha definido una función de sonificación específica.")
-#            st.stop()
-
-
 
     if st.button("🎶 Sonificar espectro"):
         if tipo_galaxia == "Espiral":
             fig = sonificar_espirales(archivo_path, rango_onda=(rango_ini, rango_fin), tempo=tempo, duracion_nota=duracion)
             archivo_emision = "salida_emision.mid"
             archivo_absorcion = "salida_absorcion.mid"
+            archivo_completo = "salida_completo.mid"
+
         elif tipo_galaxia == "Eliptica":
             fig = sonificar_elipticas(archivo_path, rango_onda=(rango_ini, rango_fin), tempo=tempo, duracion_nota=duracion)
             archivo_emision = "elipticas_emision.mid"
             archivo_absorcion = "elipticas_absorcion.mid"
+            archivo_completo = "salida_completo.mid"
+            
         else:
             st.warning("Este tipo de galaxia es 'Irregular'. No se ha definido una función de sonificación específica.")
             st.stop()
+            
 
         # Mostrar gráfica
         st.subheader("📈 Gráfica de la Sonificación")
@@ -63,17 +59,28 @@ if archivo is not None:
             st.download_button("⬇️ Descargar MIDI de Absorción", data=open(archivo_absorcion, "rb"), file_name=archivo_absorcion)
 
         # Convertir a WAV
-        convertir_midi_a_wav(archivo_emision, "emision.wav")
-        convertir_midi_a_wav(archivo_absorcion, "absorcion.wav")
+        #convertir_midi_a_wav(archivo_emision, "emision.wav")
+        #convertir_midi_a_wav(archivo_absorcion, "absorcion.wav")
 
         # Mezclar y reproducir
-        mezclar_wavs("emision.wav", "absorcion.wav", salida="mezcla.wav")
-        st.subheader("🎧 Reproductor de Sonificación Combinada")
-        st.audio("mezcla.wav", format="audio/wav")
+        #mezclar_wavs("emision.wav", "absorcion.wav", salida="mezcla.wav")
+        #st.subheader("🎧 Reproductor de Sonificación Combinada")
+        #st.audio("mezcla.wav", format="audio/wav")
+        
+        # Convertir a WAV
+        convertir_midi_a_wav_musescore(archivo_emision, "emision.wav")
+        convertir_midi_a_wav_musescore(archivo_absorcion, "absorcion.wav")
+        convertir_midi_a_wav_musescore(archivo_completo, "completo.wav")
+
+    # Mezclar y reproducir
+        #mezclar_wavs("emision.wav", "absorcion.wav", salida="mezcla.wav")
+        st.subheader("🎧 Reproductor de Sonificación")
+        st.audio("completo.wav", format="audio/wav")
 
 
 
         # Mostrar enlaces para descargar archivos MIDI
+        st.download_button("⬇️ Descargar Wav completo",data=open("completo.wav", "rb"), file_name="Sonificación del espectro.wav")
         col1, col2 = st.columns(2)
         with col1:
             st.download_button("⬇️ Descargar MIDI de Emisión", data=open("salida_emision.mid", "rb"), file_name="salida_emision.mid")
