@@ -4,3 +4,4 @@ midi2audio
 midiutil
 numpy
 matplotlib
+scipy
