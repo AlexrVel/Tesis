@@ -60,39 +60,31 @@ def detectar_region_plana(archivo, ventana=100, suavizado=10, rango_central=(0.9
 
 
 def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_nota=0.5,
-                        salida_midi_emision="salida_emision.mid", salida_midi_absorcion="salida_absorcion.mid", salida_midi_completo="salida_completo.mid",
+                        salida_midi_emision=None, salida_midi_absorcion=None, salida_midi_completo=None,
                         ventana=100, suavizado=10, rango_central=(0.95, 1.05), instrumento_emision=0, instrumento_absorcion=24, nombre_archivo=None):
+    puntos_sonificados = []
     # Cargar datos
     with open(archivo, 'r') as f:
         primera_linea = f.readline().strip()
-    
     # Detectar si hay encabezado
     try:
         [float(x) for x in primera_linea.split()]
         skip = 0  # No es encabezado
     except ValueError:
         skip = 1  # Es encabezado
-
     # Intentar leer con diferentes separadores
     try:
         datos = pd.read_csv(archivo, sep=r"\s+", comment='#', header=None, skiprows=skip, dtype={0: float, 1: float})
     except:
         datos = pd.read_csv(archivo, sep=';', comment='#', header=None, skiprows=skip, dtype={0: float, 1: float})
-    
     # Extraer longitudes de onda e intensidades
     todas_wavelengths = datos.iloc[:, 0].values
     todas_intensities = datos.iloc[:, 1].values
-    
     # Filtrar la región de interés
     mask = (datos.iloc[:, 0] >= rango_onda[0]) & (datos.iloc[:, 0] <= rango_onda[1])
     wavelengths = datos.iloc[:, 0][mask].values
     intensities = datos.iloc[:, 1][mask].values
-    
     # Calcular estadísticas
-    #mean_intensity = np.mean(todas_intensities)
-    #std_intensity = np.std(todas_intensities)
-
-        # Detectar la media y desviación en una región plana
     mean_intensity, std_intensity = detectar_region_plana(archivo, ventana, suavizado, rango_central)
 
     if mean_intensity is None or std_intensity is None:
@@ -103,6 +95,13 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
     max_intensity = np.max(todas_intensities)
 
     archivo_nombre = os.path.splitext(os.path.basename(archivo))[0]
+
+    # Asegurar que la carpeta de destino existe para los archivos MIDI
+    for path_midi in [salida_midi_emision, salida_midi_absorcion, salida_midi_completo]:
+        if path_midi is not None:
+            carpeta_destino = os.path.dirname(path_midi)
+            if carpeta_destino and not os.path.exists(carpeta_destino):
+                os.makedirs(carpeta_destino, exist_ok=True)
     
     # Definir la escala pentatónica con nombres de notas
     pentatonic_scale = [("A", 69), ("C", 72), ("D", 74), ("E", 76), ("G", 79)]
@@ -130,18 +129,18 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
     
     for i, intensity in enumerate(intensities):
         tiempo = i * duracion_nota  # Asegurar que ambos MIDI estén sincronizados
-        
         index = int((intensity - min_intensity) / step_size)
         index = max(0, min(index, num_notes - 1))  # Asegurar índice válido
         note_name, note = full_scale[index]
-        
         if intensity > mean_intensity:  # Emisión
             midi_emision.addNote(0, 0, note, tiempo, duracion_nota, 100)
             midi_completo.addNote(0, 0, note, tiempo, duracion_nota, 100)
+            midi_absorcion.addNote(0, 0, 0, tiempo, duracion_nota, 0)  # Silencio en absorción
         else:  # Absorción
             midi_absorcion.addNote(0, 0, note, tiempo, duracion_nota, 100)
             midi_completo.addNote(1, 1, note, tiempo, duracion_nota, 100)
-    
+            midi_emision.addNote(0, 0, 0, tiempo, duracion_nota, 0)  # Silencio en emisión
+        puntos_sonificados.append((wavelengths[i], intensity))
     # Guardar archivos MIDI
     with open(salida_midi_emision, "wb") as output_file:
         midi_emision.writeFile(output_file)
@@ -151,9 +150,13 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
         midi_absorcion.writeFile(output_file)
     print(f"Archivo MIDI de absorción guardado como '{salida_midi_absorcion}'")
 
+    # Crear midi_completo sumando eventos de ambos archivos
+    # Leer eventos de ambos archivos y agregarlos a midi_completo
+    # (Esto es redundante si ya se agregan arriba, pero se asegura integridad)
+    # Si se requiere, aquí se puede implementar la suma real de eventos
     with open(salida_midi_completo, "wb") as f:
         midi_completo.writeFile(f)
-    print(f"Archivo MIDI de absorción guardado como '{salida_midi_completo}'")
+    print(f"Archivo MIDI completo guardado como '{salida_midi_completo}'")
     
 
     # Mapeo de colores para cada nota
@@ -221,35 +224,29 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
 
 
 def sonificar_elipticas(archivo, rango_onda=(6500, 6700), tempo=200, duracion_nota=0.5,
-                        salida_midi_emision="elipticas_emision.mid", salida_midi_absorcion="elipticas_absorcion.mid", salida_midi_completo="salida_completo.mid",
+                        salida_midi_emision=None, salida_midi_absorcion=None, salida_midi_completo=None,
                         ventana=100, suavizado=10, rango_central=(0.95, 1.05), instrumento_emision=0, instrumento_absorcion=24, nombre_archivo=None):
     # Cargar datos
     with open(archivo, 'r') as f:
         primera_linea = f.readline().strip()
-    
     # Detectar si hay encabezado
     try:
         [float(x) for x in primera_linea.split()]
         skip = 0  # No es encabezado
     except ValueError:
         skip = 1  # Es encabezado
-
     # Intentar leer con diferentes separadores
     try:
         datos = pd.read_csv(archivo, sep=r"\s+", comment='#', header=None, skiprows=skip, dtype={0: float, 1: float})
     except:
         datos = pd.read_csv(archivo, sep=';', comment='#', header=None, skiprows=skip, dtype={0: float, 1: float})
-    
     # Extraer longitudes de onda e intensidades
     todas_wavelengths = datos.iloc[:, 0].values
     todas_intensities = datos.iloc[:, 1].values
-    
     # Filtrar la región de interés
     mask = (datos.iloc[:, 0] >= rango_onda[0]) & (datos.iloc[:, 0] <= rango_onda[1])
     wavelengths = datos.iloc[:, 0][mask].values
     intensities = datos.iloc[:, 1][mask].values
-
-        # Detectar la media y desviación en una región plana
     mean_intensity, std_intensity = detectar_region_plana(archivo, ventana, suavizado, rango_central)
 
     if mean_intensity is None or std_intensity is None:
@@ -258,44 +255,44 @@ def sonificar_elipticas(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
     
     min_intensity = np.min(todas_intensities)
     max_intensity = np.max(todas_intensities)
-
     archivo_nombre = os.path.splitext(os.path.basename(archivo))[0]
-    
+    # Definir nombres de salida personalizados si no se pasan explícitamente
+    if salida_midi_emision is None:
+        salida_midi_emision = f"{archivo_nombre}_emisión.mid"
+    if salida_midi_absorcion is None:
+        salida_midi_absorcion = f"{archivo_nombre}_absorción.mid"
+    if salida_midi_completo is None:
+        salida_midi_completo = f"{archivo_nombre}.mid"
     # Definir la escala pentatónica con nombres de notas
     pentatonic_scale = [("A", 69), ("C", 72), ("D", 74), ("E", 76), ("G", 79)]
     octaves = [-24, -12, 0, 12, 24, 36]  # 6 octavas desde -2 hasta +3
-    
     # Expandir la escala a múltiples octavas con nombres
     full_scale = [(name, note + octave) for octave in octaves for name, note in pentatonic_scale]
     num_notes = len(full_scale)
     step_size = 1.05 / num_notes  # Ajustar según el rango de amplitudes (0 a 2)
-    
     # Crear archivos MIDI separados para emisión y absorción
     midi_emision = MIDIFile(1)
     midi_absorcion = MIDIFile(1)
     midi_emision.addTempo(0, 0, tempo)
     midi_absorcion.addTempo(0, 0, tempo)
-
     midi_completo = MIDIFile(2)  # Dos canales: 0 = emisión, 1 = absorción
     midi_completo.addTempo(0, 0, tempo)
     midi_completo.addTempo(1, 0, tempo)
-    
     puntos_sonificados = []
-    
     for i, intensity in enumerate(intensities):
         index = int((intensity - min_intensity) / step_size)
         index = max(0, min(index, num_notes - 1))  # Asegurar índice válido
         note_name, note = full_scale[index]
-        
+        tiempo = i * duracion_nota
         if intensity >= 1:  # Emisión
-            midi_emision.addNote(0, 0, note + 12, i * duracion_nota, duracion_nota, 100)  # Octava más alta
-            midi_completo.addNote(0, 0, note, tempo, duracion_nota, 100)
+            midi_emision.addNote(0, 0, note + 12, tiempo, duracion_nota, 100)  # Octava más alta
+            midi_completo.addNote(0, 0, note, tiempo, duracion_nota, 100)
+            midi_absorcion.addNote(0, 0, 0, tiempo, duracion_nota, 0)  # Silencio en absorción
         else:  # Absorción
-            midi_absorcion.addNote(0, 0, note - 12, i * duracion_nota, duracion_nota, 100)  # Octava más baja
-            midi_completo.addNote(1, 1, note, tempo, duracion_nota, 100)
-        
+            midi_absorcion.addNote(0, 0, note - 12, tiempo, duracion_nota, 100)  # Octava más baja
+            midi_completo.addNote(1, 1, note, tiempo, duracion_nota, 100)
+            midi_emision.addNote(0, 0, 0, tiempo, duracion_nota, 0)  # Silencio en emisión
         puntos_sonificados.append((wavelengths[i], intensity))
-    
     # Guardar archivos MIDI
     with open(salida_midi_emision, "wb") as output_file:
         midi_emision.writeFile(output_file)

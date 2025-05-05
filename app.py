@@ -62,16 +62,18 @@ def index():
         tipo_galaxia = request.form.get('tipo_galaxia')
         if tipo_galaxia == 'Espiral':
             nombre_archivo = os.path.basename(archivo.filename) if archivo else os.path.basename(archivo_path)
-            fig = sonificar_espirales(archivo_path, rango_onda=(rango_ini, rango_fin), tempo=tempo, duracion_nota=duracion, instrumento_emision=instrumento_emision, instrumento_absorcion=instrumento_absorcion, nombre_archivo=nombre_archivo)
-            archivo_emision = os.path.join(carpeta_usuario, 'salida_emision.mid')
-            archivo_absorcion = os.path.join(carpeta_usuario, 'salida_absorcion.mid')
-            archivo_completo = os.path.join(carpeta_usuario, 'salida_completo.mid')
+            base_nombre = os.path.splitext(nombre_archivo)[0]
+            archivo_emision = os.path.join(carpeta_usuario, f'{base_nombre}_emisión.mid')
+            archivo_absorcion = os.path.join(carpeta_usuario, f'{base_nombre}_absorción.mid')
+            archivo_completo = os.path.join(carpeta_usuario, f'{base_nombre}.mid')
+            fig = sonificar_espirales(archivo_path, rango_onda=(rango_ini, rango_fin), tempo=tempo, duracion_nota=duracion, instrumento_emision=instrumento_emision, instrumento_absorcion=instrumento_absorcion, nombre_archivo=nombre_archivo, salida_midi_emision=archivo_emision, salida_midi_absorcion=archivo_absorcion, salida_midi_completo=archivo_completo)
         else:
             nombre_archivo = os.path.basename(archivo.filename) if archivo else os.path.basename(archivo_path)
-            fig = sonificar_elipticas(archivo_path, rango_onda=(rango_ini, rango_fin), tempo=tempo, duracion_nota=duracion, instrumento_emision=instrumento_emision, instrumento_absorcion=instrumento_absorcion, nombre_archivo=nombre_archivo)
-            archivo_emision = os.path.join(carpeta_usuario, 'elipticas_emision.mid')
-            archivo_absorcion = os.path.join(carpeta_usuario, 'elipticas_absorcion.mid')
-            archivo_completo = os.path.join(carpeta_usuario, 'salida_completo.mid')
+            base_nombre = os.path.splitext(nombre_archivo)[0]
+            archivo_emision = os.path.join(carpeta_usuario, f'{base_nombre}_emisión.mid')
+            archivo_absorcion = os.path.join(carpeta_usuario, f'{base_nombre}_absorción.mid')
+            archivo_completo = os.path.join(carpeta_usuario, f'{base_nombre}.mid')
+            fig = sonificar_elipticas(archivo_path, rango_onda=(rango_ini, rango_fin), tempo=tempo, duracion_nota=duracion, instrumento_emision=instrumento_emision, instrumento_absorcion=instrumento_absorcion, nombre_archivo=nombre_archivo, salida_midi_emision=archivo_emision, salida_midi_absorcion=archivo_absorcion, salida_midi_completo=archivo_completo)
         fig.savefig(os.path.join(carpeta_usuario, 'sonificacion.svg'), format='svg')
         resultado = "Sonificación completada. Archivos MIDI disponibles para descarga."
         session['archivo_emision'] = archivo_emision
@@ -108,3 +110,4 @@ def mostrar_svg():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
