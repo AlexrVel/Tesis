@@ -61,7 +61,7 @@ def detectar_region_plana(archivo, ventana=100, suavizado=10, rango_central=(0.9
 
 def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_nota=0.5,
                         salida_midi_emision="salida_emision.mid", salida_midi_absorcion="salida_absorcion.mid", salida_midi_completo="salida_completo.mid",
-                        ventana=100, suavizado=10, rango_central=(0.95, 1.05)):
+                        ventana=100, suavizado=10, rango_central=(0.95, 1.05), instrumento_emision=0, instrumento_absorcion=24, nombre_archivo=None):
     # Cargar datos
     with open(archivo, 'r') as f:
         primera_linea = f.readline().strip()
@@ -116,13 +116,17 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
     # Crear archivos MIDI para emisión y absorción
     midi_emision = MIDIFile(1)
     midi_emision.addTempo(0, 0, tempo)
+    # midi_emision.addProgramChange(0, 0, 0, instrumento_emision)  # Eliminado para dejar el MIDI crudo
     
     midi_absorcion = MIDIFile(1)
     midi_absorcion.addTempo(0, 0, tempo)
-
+    # midi_absorcion.addProgramChange(0, 0, 0, instrumento_absorcion)  # Eliminado para dejar el MIDI crudo
+    
     midi_completo = MIDIFile(2)  # Dos canales: 0 = emisión, 1 = absorción
     midi_completo.addTempo(0, 0, tempo)
     midi_completo.addTempo(1, 0, tempo)
+    # midi_completo.addProgramChange(0, 0, 0, instrumento_emision)  # Eliminado para dejar el MIDI crudo
+    # midi_completo.addProgramChange(1, 1, 0, instrumento_absorcion)  # Eliminado para dejar el MIDI crudo
     
     for i, intensity in enumerate(intensities):
         tiempo = i * duracion_nota  # Asegurar que ambos MIDI estén sincronizados
@@ -166,15 +170,16 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
     # --- PRIMER GRÁFICO: Espectro completo con la región resaltada ---
     axs[0].plot(todas_wavelengths, todas_intensities, color="gray", alpha=0.7, label="Espectro completo")
     axs[0].axvspan(rango_onda[0], rango_onda[1], color='yellow', alpha=0.3, label="Región sonificada")
-    
     # Líneas de referencia
     axs[0].axhline(y=mean_intensity, color="black", linestyle="-", linewidth=1.5, label="Media de intensidades")
     axs[0].axhline(y=mean_intensity + 1*std_intensity, color="green", linestyle="-", linewidth=1.5)
     axs[0].axhline(y=mean_intensity - 1*std_intensity, color="red", linestyle="-", linewidth=1.5)
-    
     axs[0].set_xlabel("Longitud de onda (Å)")
     axs[0].set_ylabel("Intensidad normalizada")
-    axs[0].set_title(f"Espectro completo {archivo_nombre}")
+    if nombre_archivo:
+        axs[0].set_title(f"Espectro completo {nombre_archivo}")
+    else:
+        axs[0].set_title(f"Espectro completo")
     axs[0].legend()
     axs[0].grid()
     
@@ -217,7 +222,7 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
 
 def sonificar_elipticas(archivo, rango_onda=(6500, 6700), tempo=200, duracion_nota=0.5,
                         salida_midi_emision="elipticas_emision.mid", salida_midi_absorcion="elipticas_absorcion.mid", salida_midi_completo="salida_completo.mid",
-                        ventana=100, suavizado=10, rango_central=(0.95, 1.05)):
+                        ventana=100, suavizado=10, rango_central=(0.95, 1.05), instrumento_emision=0, instrumento_absorcion=24, nombre_archivo=None):
     # Cargar datos
     with open(archivo, 'r') as f:
         primera_linea = f.readline().strip()
