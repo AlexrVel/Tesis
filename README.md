@@ -104,4 +104,10 @@ TesisAlex/
 ## 🎁 Créditos
 
 - Código estructurado por [@raptorf2286](https://github.com/raptorf2286)
-- Inspirado por la pasión de un astrónomo que quiere escuchar el universo 💫
+- Inspirado por la pasión de un astrónomo que quiere escuchar el universo 💫  [@AlexVel](https://github.com/AlexVel)
+
+🤖 Asistencia técnica brindada por una IA colaborativa, 
+con alma de sintetizador y oído cósmico para galaxias en clave de Sol.
+
+![image](https://github.com/user-attachments/assets/6c8b6c94-1e56-4802-b4ad-ea9ef4430b46)
+
