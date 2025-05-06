@@ -4,35 +4,9 @@
     <meta charset="UTF-8">
     <title>Sonificación de Espectros Galácticos</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
-        .container { max-width: 1100px; margin: 30px auto; background: #fff; padding: 24px 32px 32px 32px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; }
-        .main-layout { display: flex; flex-direction: row; gap: 32px; }
-        .form-col { flex: 1 1 340px; max-width: 370px; min-width: 260px; margin-right: 0; }
-        .form-col form { margin-bottom: 0; }
-        .form-col label { display: block; margin-top: 8px; font-weight: bold; }
-        .form-col input[type="file"], .form-col input[type="number"], .form-col input[type="text"], .form-col select { width: 100%; padding: 6px; margin-top: 2px; border-radius: 4px; border: 1px solid #ccc; }
-        .botones { display: flex; gap: 12px; margin-top: 16px; justify-content: center; }
-        button, .descargar { padding: 8px 18px; border: none; border-radius: 4px; background: #1976d2; color: #fff; font-size: 1em; cursor: pointer; transition: background 0.2s; text-decoration: none; }
-        button:hover, .descargar:hover { background: #125ea2; }
-        .graph-col { flex: 2 1 0; min-width: 350px; display: flex; flex-direction: column; align-items: flex-start; }
-        .svg-container { position: relative; margin: 0 0 18px 0; width: 100%; min-height: 440px; }
-        .svg-container object { width: 100% !important; height: 440px !important; }
-        .barra-reproduccion { position: absolute; top: 0; bottom: 0; width: 3px; background: #e53935; pointer-events: none; z-index: 10; }
-        .audio-controls { margin-top: 0; display: flex; gap: 40px; justify-content: flex-start; }
-        .audio-controls > div { display: flex; flex-direction: column; align-items: flex-start; }
-        .audio-controls label { font-size: 0.95em; }
-        .midi-player { display: flex; align-items: center; gap: 10px; margin: 18px 0 0 0; justify-content: flex-start; }
-        .resultado { text-align: left; margin: 12px 0; color: #388e3c; font-weight: bold; }
-        .descargas { display: flex; gap: 10px; justify-content: flex-start; margin-top: 12px; }
-        @media (max-width: 900px) {
-            .main-layout { flex-direction: column; gap: 0; }
-            .form-col, .graph-col { max-width: 100%; min-width: 0; }
-            .svg-container { min-height: 320px; }
-        }
-        @media (max-width: 600px) { .container { padding: 10px; } }
-    </style>
+
+  ACA SE IMPORTAN LOS ESTILOS DEL CSS QUE HAY ARRIBA
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="container">
@@ -133,7 +107,7 @@
                 const archivoInput = document.getElementById('archivo');
                 const form = document.getElementById('sonificarForm');
                 const sonificarBtn = document.getElementById('sonificarBtn');
-                
+
                 function resetRangosAlSubirArchivo() {
                     rangoIniInput.value = minWavelength;
                     rangoFinInput.value = maxWavelength;
@@ -143,7 +117,7 @@
                     iniVal.textContent = minWavelength;
                     finVal.textContent = maxWavelength;
                 }
-                
+
                 if (sliderRango.noUiSlider) {
                     sliderRango.noUiSlider.destroy();
                 }
@@ -178,7 +152,7 @@
                     if(fin < ini) { fin = ini; rangoFinInput.value = fin; }
                     sliderRango.noUiSlider.set([null, fin]);
                 });
-                
+
                 // Permitir cambiar rangos y sonificar sin recargar archivo
                 form.addEventListener('submit', function(e) {
                     if (!archivoInput.value && !archivoInput.hasAttribute('data-file-loaded')) {
@@ -201,7 +175,7 @@
                         });
                     }
                 });
-                
+
                 archivoInput.addEventListener('change', function() {
                     if (archivoInput.value) {
                         archivoInput.setAttribute('data-file-loaded', 'true');
@@ -210,7 +184,7 @@
                         archivoInput.removeAttribute('data-file-loaded');
                     }
                 });
-                
+
                 // Al enviar el formulario, si el archivo ya está cargado, no volver a pedirlo
                 form.addEventListener('submit', function(e) {
                     if (!archivoInput.value && archivoInput.hasAttribute('data-file-loaded')) {
@@ -218,7 +192,7 @@
                         // El backend usará el archivo de sesión
                     }
                 });
-                
+
                 // Al subir un nuevo archivo, limpiar el estado anterior
                 archivoInput.addEventListener('click', function() {
                     archivoInput.value = '';
@@ -401,7 +375,7 @@
         const archivoInput = document.getElementById('archivo');
         const form = document.getElementById('sonificarForm');
         const sonificarBtn = document.getElementById('sonificarBtn');
-        
+
         function resetRangosAlSubirArchivo() {
             rangoIniInput.value = minWavelength;
             rangoFinInput.value = maxWavelength;
@@ -411,7 +385,7 @@
             iniVal.textContent = minWavelength;
             finVal.textContent = maxWavelength;
         }
-        
+
         if (sliderRango.noUiSlider) {
             sliderRango.noUiSlider.destroy();
         }
@@ -446,7 +420,7 @@
             if(fin < ini) { fin = ini; rangoFinInput.value = fin; }
             sliderRango.noUiSlider.set([null, fin]);
         });
-        
+
         // Permitir cambiar rangos y sonificar sin recargar archivo
         form.addEventListener('submit', function(e) {
             if (!archivoInput.value && !archivoInput.hasAttribute('data-file-loaded')) {
@@ -469,7 +443,7 @@
                 });
             }
         });
-        
+
         archivoInput.addEventListener('change', function() {
             if (archivoInput.value) {
                 archivoInput.setAttribute('data-file-loaded', 'true');
@@ -478,7 +452,7 @@
                 archivoInput.removeAttribute('data-file-loaded');
             }
         });
-        
+
         // Al enviar el formulario, si el archivo ya está cargado, no volver a pedirlo
         form.addEventListener('submit', function(e) {
             if (!archivoInput.value && archivoInput.hasAttribute('data-file-loaded')) {
@@ -486,7 +460,7 @@
                 // El backend usará el archivo de sesión
             }
         });
-        
+
         // Al subir un nuevo archivo, limpiar el estado anterior
         archivoInput.addEventListener('click', function() {
             archivoInput.value = '';
