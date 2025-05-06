@@ -8,26 +8,28 @@ from midi2audio import FluidSynth
 import subprocess
 from pydub import AudioSegment
 
-
-def detectar_region_plana(archivo, ventana=100, suavizado=10, rango_central=(0.95, 1.05)):
-    
-    # Cargar datos
+def cargar_datos(archivo):
+        # Cargar datos
     with open(archivo, 'r') as f:
         primera_linea = f.readline().strip()
-    
     # Detectar si hay encabezado
     try:
         [float(x) for x in primera_linea.split()]
         skip = 0  # No es encabezado
     except ValueError:
         skip = 1  # Es encabezado
-
     # Intentar leer con diferentes separadores
     try:
         datos = pd.read_csv(archivo, sep=r"\s+", comment='#', header=None, skiprows=skip, dtype={0: float, 1: float})
     except:
         datos = pd.read_csv(archivo, sep=';', comment='#', header=None, skiprows=skip, dtype={0: float, 1: float})
+    return (datos)
 
+
+def detectar_region_plana(archivo, ventana=100, suavizado=10, rango_central=(0.95, 1.05)):
+    
+    # Cargar datos
+    datos = cargar_datos(archivo)
     
     longitudes_onda = datos.iloc[:, 0].values
     intensidades = datos.iloc[:, 1].values
@@ -64,20 +66,7 @@ def sonificar_espirales(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
                         ventana=100, suavizado=10, rango_central=(0.95, 1.05), instrumento_emision=0, instrumento_absorcion=24, nombre_archivo=None):
     puntos_sonificados = []
     # Cargar datos
-    with open(archivo, 'r') as f:
-        primera_linea = f.readline().strip()
-    # Detectar si hay encabezado
-    try:
-        [float(x) for x in primera_linea.split()]
-        skip = 0  # No es encabezado
-    except ValueError:
-        skip = 1  # Es encabezado
-    # Intentar leer con diferentes separadores
-    try:
-        datos = pd.read_csv(archivo, sep=r"\s+", comment='#', header=None, skiprows=skip, dtype={0: float, 1: float})
-    except:
-        datos = pd.read_csv(archivo, sep=';', comment='#', header=None, skiprows=skip, dtype={0: float, 1: float})
-    # Extraer longitudes de onda e intensidades
+    datos = cargar_datos(archivo)
     todas_wavelengths = datos.iloc[:, 0].values
     todas_intensities = datos.iloc[:, 1].values
     # Filtrar la región de interés
@@ -227,19 +216,7 @@ def sonificar_elipticas(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
                         salida_midi_emision=None, salida_midi_absorcion=None, salida_midi_completo=None,
                         ventana=100, suavizado=10, rango_central=(0.95, 1.05), instrumento_emision=0, instrumento_absorcion=24, nombre_archivo=None):
     # Cargar datos
-    with open(archivo, 'r') as f:
-        primera_linea = f.readline().strip()
-    # Detectar si hay encabezado
-    try:
-        [float(x) for x in primera_linea.split()]
-        skip = 0  # No es encabezado
-    except ValueError:
-        skip = 1  # Es encabezado
-    # Intentar leer con diferentes separadores
-    try:
-        datos = pd.read_csv(archivo, sep=r"\s+", comment='#', header=None, skiprows=skip, dtype={0: float, 1: float})
-    except:
-        datos = pd.read_csv(archivo, sep=';', comment='#', header=None, skiprows=skip, dtype={0: float, 1: float})
+    datos = cargar_datos(archivo)
     # Extraer longitudes de onda e intensidades
     todas_wavelengths = datos.iloc[:, 0].values
     todas_intensities = datos.iloc[:, 1].values
@@ -265,7 +242,7 @@ def sonificar_elipticas(archivo, rango_onda=(6500, 6700), tempo=200, duracion_no
         salida_midi_completo = f"{archivo_nombre}.mid"
     # Definir la escala pentatónica con nombres de notas
     pentatonic_scale = [("A", 69), ("C", 72), ("D", 74), ("E", 76), ("G", 79)]
-    octaves = [-24, -12, 0, 12, 24, 36]  # 6 octavas desde -2 hasta +3
+    octaves = [-24, -12, 0, 12, 24, 36, 48]  # 7 octavas desde -2 hasta +4
     # Expandir la escala a múltiples octavas con nombres
     full_scale = [(name, note + octave) for octave in octaves for name, note in pentatonic_scale]
     num_notes = len(full_scale)
