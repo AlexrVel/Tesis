@@ -28,7 +28,9 @@ def convert_midi_to_wav(midi_path, wav_path, soundfont_path="FluidR3_GM.sf2", fl
     """
     midi_path = os.path.abspath(midi_path)
     wav_path = os.path.abspath(wav_path)
-    soundfont_path = os.path.abspath(soundfont_path)
+    # soundfont_path = os.path.abspath(soundfont_path)  # Línea original
+    # soundfont_path = os.path.abspath("FluidR3_GM.sf2")  # Línea original comentada
+    soundfont_path = os.path.abspath("GeneralUser-GS.sf2")  # Usar el nuevo SoundFont
 
     if not os.path.exists(midi_path):
         raise FileNotFoundError(f"MIDI no encontrado: {midi_path}")
